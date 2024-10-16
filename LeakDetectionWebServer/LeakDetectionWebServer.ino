@@ -94,6 +94,11 @@ void handleRoot() {
     digitalWrite(led, 0);
 }
 
+void handleGetValvePosition() {
+    String jsonResponse = "{\"valvePosition\": " + String(valvePosition) + "}";
+    server.send(200, "application/json", jsonResponse);
+}
+
 void handleSetValvePosition() {
     if (server.hasArg("valvePosition")) {
         valvePosition = server.arg("valvePosition").toInt();  // Update the valve position
@@ -203,18 +208,18 @@ void ConnectToWifi()
     Serial.println(WiFi.localIP());
 }
 
-void InitializeWebServer(){
-    if (MDNS.begin("whoisleaking")) 
-    { 
-        Serial.println("MDNS responder started"); 
+void InitializeWebServer() {
+    if (MDNS.begin("whoisleaking")) {
+        Serial.println("MDNS responder started");
     }
 
-  server.on("/", handleRoot);
-  server.on("/setValvePosition", handleSetValvePosition);
-  server.on("/login", HTTP_POST, handleLogin);
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
+    server.on("/", handleRoot);
+    server.on("/setValvePosition", handleSetValvePosition);
+    server.on("/getValvePosition", handleGetValvePosition); // Endpoint to get current valve position
+    server.on("/login", HTTP_POST, handleLogin);
+    server.onNotFound(handleNotFound);
+    server.begin();
+    Serial.println("HTTP server started");
 }
 
 void InitializeFileServer()

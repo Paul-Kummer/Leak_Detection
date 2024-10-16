@@ -1,0 +1,229 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 200px 1fr;
+    grid-template-areas:
+        "header header"
+        "nav main";
+}
+
+header {
+    grid-area: header;
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 2em;
+}
+
+nav {
+    grid-area: nav;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border: 3px solid #808080;
+    height: calc(100vh - 100px);
+}
+
+    nav a {
+        display: block;
+        color: #333;
+        padding: 10px 0;
+        text-decoration: none;
+        border-bottom: 1px solid #808080;
+    }
+
+        nav a:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+
+.main-container {
+    grid-area: main;
+    padding: 20px;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.combined-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.equal-height-container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.slider-container {
+    flex: 4;
+    border: 3px solid #808080;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
+    min-width: 200px;
+}
+
+.slider-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.slider {
+    width: 75%;
+    margin: 10px auto;
+    display: block;
+}
+
+.slider-value {
+    font-size: 1em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 0;
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.button {
+    padding: 15px 0;
+    cursor: pointer;
+    font-size: 0.85em;
+    border: none;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.close-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+    .close-button:hover {
+        background-color: #c82333;
+    }
+
+.set-button {
+    background-color: #007BFF;
+    color: white;
+}
+
+    .set-button:hover {
+        background-color: #0056b3;
+    }
+
+.open-button {
+    background-color: #28a745;
+    color: white;
+}
+
+    .open-button:hover {
+        background-color: #218838;
+    }
+
+.close-button,
+.open-button {
+    width: 25%;
+}
+
+.set-button {
+    width: calc(50% - 2px);
+}
+
+.retro-display-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+    min-width: 150px;
+    border: 3px solid #808080;
+    box-sizing: border-box;
+    background-color: #D3D3D3;
+}
+
+.retro-display-title {
+    margin: 0;
+    color: #000000;
+    font-weight: bold;
+    font-size: 1.5em;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #D3D3D3;
+}
+
+.retro-display-container {
+    width: 100%;
+    background-color: #000;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.segment-display {
+    font-size: 5em;
+    font-family: 'Digital-7', 'Courier New', Courier, monospace;
+    line-height: 1;
+    margin: 20px 0;
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    color: #00FF00;
+}
+
+.alerts-table-container {
+    width: 100%;
+    margin-top: 20px;
+    border: 3px solid #808080;
+    box-sizing: border-box;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.alerts-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-sizing: border-box;
+}
+
+    .alerts-table th,
+    .alerts-table td {
+        border: 1px solid #808080;
+        padding: 10px;
+        text-align: left;
+        font-family: Arial, sans-serif;
+        font-size: 1em;
+    }
+
+    .alerts-table th {
+        background-color: #D3D3D3;
+        font-weight: bold;
+    }
+
+    .alerts-table td {
+        background-color: #ffffff;
+    }
