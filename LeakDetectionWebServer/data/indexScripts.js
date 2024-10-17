@@ -15,6 +15,17 @@ document.addEventListener("DOMContentLoaded", function () {
         sendDesiredPosition(sliderValue);
         startPolling();  // Start polling for updates
     });
+
+    // Stop button logic: Set desired position to current valve position
+    document.querySelector(".stop-button").addEventListener("click", () => {
+        fetch('/getValvePosition')
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Setting desired position to current: ${data.valvePosition}%`);
+                sendDesiredPosition(data.valvePosition);  // Set desired to current
+            })
+            .catch(error => console.error('Error fetching valve position:', error));
+    });
 });
 
 function updateSliderValue() {
