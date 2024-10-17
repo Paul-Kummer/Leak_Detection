@@ -68,6 +68,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int led = 13;
 int valvePosition = 0;
+int desiredPosition = 0;
 
 void handleRoot() {
     digitalWrite(led, 1);
