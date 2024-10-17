@@ -177,16 +177,28 @@ void handleScript() {
 }
 
 
-void DisplayInfo(String dispInfo)
-{
-    display.clearDisplay();
+void DisplayInfo(String dispInfo) {
+    display.clearDisplay();  // Clear the display buffer
 
-  display.setTextSize(6); // Draw 2X-scale text
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(5, 10);
-  display.println(dispInfo);
-  display.display();      // Show initial text
+    // Dynamically adjust text size based on the length of the string
+    int textSize = (dispInfo.length() > 3) ? 4 : 6;  // Smaller size for longer text
+    display.setTextSize(textSize);  // Apply the chosen text size
+    display.setTextColor(SSD1306_WHITE);
+
+    // Calculate text bounds to center it on the screen
+    int16_t x1, y1;
+    uint16_t width, height;
+    display.getTextBounds(dispInfo, 0, 0, &x1, &y1, &width, &height);
+
+    // Center the text horizontally and vertically
+    int x = (SCREEN_WIDTH - width) / 2;
+    int y = (SCREEN_HEIGHT - height) / 2;
+
+    display.setCursor(x, y);  // Set the cursor position
+    display.println(dispInfo);  // Print the text
+    display.display();  // Display the updated content
 }
+
 
 void WriteLine(char text[]) {
   display.clearDisplay();
