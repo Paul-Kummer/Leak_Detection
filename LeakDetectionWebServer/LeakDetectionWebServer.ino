@@ -101,15 +101,22 @@ void handleGetValvePosition() {
 
 void handleSetValvePosition() {
     if (server.hasArg("valvePosition")) {
-        valvePosition = server.arg("valvePosition").toInt();  // Update the valve position
+        valvePosition = server.arg("valvePosition").toInt();
         Serial.printf("Received valve position: %d%%\n", valvePosition);
         DisplayInfo(String(valvePosition) + "%");
     }
-
-    // Redirect back to the main page after handling
-    server.sendHeader("Location", "/");
-    server.send(303); // HTTP status code for redirect
+    server.send(200, "application/json", "{\"status\":\"success\"}");
 }
+
+void handleSetDesiredPosition() {
+    if (server.hasArg("desiredPosition")) {
+        desiredPosition = server.arg("desiredPosition").toInt();
+        Serial.printf("Received desired position: %d%%\n", desiredPosition);
+    }
+    server.send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+
 
 // If a POST request is made to URI /login
 void handleLogin() {                         
@@ -148,6 +155,27 @@ void handleNotFound() {
   server.send(404, "text/plain", message);
   digitalWrite(led, 0);
 }
+
+void handleStyles() {
+    File file = SPIFFS.open("/styles.css", "r");
+    if (!file) {
+        server.send(404, "text/plain", "CSS file not found");
+        return;
+    }
+    server.streamFile(file, "text/css");
+    file.close();
+}
+
+void handleScript() {
+    File file = SPIFFS.open("/indexScripts.js", "r");
+    if (!file) {
+        server.send(404, "text/plain", "JavaScript file not found");
+        return;
+    }
+    server.streamFile(file, "application/javascript");
+    file.close();
+}
+
 
 void DisplayInfo(String dispInfo)
 {
@@ -213,24 +241,28 @@ void InitializeWebServer() {
         Serial.println("MDNS responder started");
     }
 
-    server.on("/", handleRoot);
-    server.on("/setValvePosition", handleSetValvePosition);
-    server.on("/getValvePosition", handleGetValvePosition); // Endpoint to get current valve position
-    server.on("/login", HTTP_POST, handleLogin);
-    server.onNotFound(handleNotFound);
+    server.on("/", handleRoot);  // Serve index.html
+    server.on("/styles.css", handleStyles);  // Serve styles.css
+    server.on("/indexScripts.js", handleScript);  // Serve indexScripts.js
+    server.on("/setValvePosition", handleSetValvePosition);  // Handle valve position POST
+    server.on("/setDesiredPosition", handleSetDesiredPosition);
+    server.on("/getValvePosition", handleGetValvePosition);  // Provide valve position
+    server.on("/login", HTTP_POST, handleLogin);  // Handle login
+    server.onNotFound(handleNotFound);  // Handle unknown requests
+
     server.begin();
     Serial.println("HTTP server started");
 }
 
-void InitializeFileServer()
-{
-    // Initialize SPIFFS
-    if (!SPIFFS.begin()) 
-    {
+
+void InitializeFileServer() {
+    if (!SPIFFS.begin()) {
         Serial.println("SPIFFS initialization failed!");
-        return;
+        while (true);  // Halt the system if SPIFFS fails
     }
+    Serial.println("SPIFFS initialized.");
 }
+
 
 void setup(void) 
 {
@@ -245,6 +277,18 @@ void setup(void)
 }
 
 void loop(void) {
-  server.handleClient();
-  MDNS.update();
+    server.handleClient();
+    MDNS.update();
+
+    // Simulate valve movement toward the desired position
+    if (valvePosition < desiredPosition) {
+        valvePosition++;  // Increment position toward the target
+    } else if (valvePosition > desiredPosition) {
+        valvePosition--;  // Decrement position toward the target
+    }
+
+    // Display the current valve position on the OLED
+    DisplayInfo(String(valvePosition) + "%");
+
+    delay(100);  // Adjust this delay to control movement speed
 }
