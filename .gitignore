@@ -6,4 +6,4 @@
 *.db-shm
 *.db-wal
 *.opendb
-/.vs/Leak_Detection/v16
+/.vs
