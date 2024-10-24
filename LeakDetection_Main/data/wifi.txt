@@ -1,0 +1,2 @@
+#define STASSID "YourWiFi"
+#define STAPSK "YourPass"
