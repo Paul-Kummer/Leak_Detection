@@ -3,10 +3,9 @@
 
 #include <AccelStepper.h>
 
-extern AccelStepper motor;  // Declare motor as extern
-
 void initializeMotor();
 void setDesiredPosition(int percentage);
-void runMotorControl();
+void saveSettings();   // Save motor state to file
+void loadSettings();   // Load motor state from file
 
 #endif

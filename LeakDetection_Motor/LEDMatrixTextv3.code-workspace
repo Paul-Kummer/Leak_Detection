@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "../../ESP8266_LED_Text_Matrix/LEDMatrixTextv3"
+		},
+		{
+			"name": "LEDTextV3",
+			"path": "../../PlatformIO/Projects/LEDTextV3"
+		},
+		{
+			"name": "240316-090544-huzzah",
+			"path": "../../PlatformIO/Projects/240316-090544-huzzah"
+		},
+		{
+			"name": "240316-091007-esp01_1m",
+			"path": "../../PlatformIO/Projects/240316-091007-esp01_1m"
+		}
+	],
+	"settings": {
+		"java.project.sourcePaths": [
+			"include"
+		],
+		"files.associations": {
+			"string_view": "cpp"
+		}
+	}
+}

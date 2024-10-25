@@ -1,0 +1,166 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+/* Header */
+header {
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+    font-size: 2em;
+}
+
+/* Content Layout */
+.content-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Side Navigation */
+.side-nav {
+    background-color: #f4f4f4;
+    width: 200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: #007BFF;
+    color: white;
+}
+
+/* Main Content */
+.main-container {
+    flex-grow: 1;
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+/* Description Styling */
+.description {
+    margin-bottom: 20px;
+}
+
+.description ul {
+    margin-top: 10px;
+}
+
+/* Step Control */
+.step-control-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 40px 0; /* Added space above and below */
+    gap: 15px; /* Space between elements */
+}
+
+.step-select-wrapper {
+    text-align: center;
+    width: 50%;
+}
+
+select {
+    font-size: 1.5em;
+    padding: 10px;
+    width: 100%;
+}
+
+/* Large Buttons */
+.large-button {
+    font-size: 2em;
+    padding: 20px;
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.large-button:hover {
+    background-color: #0056b3;
+}
+
+/* Position Buttons */
+.position-control-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 40px 0; /* Added space above and below */
+}
+
+.position-button {
+    font-size: 1em;
+    padding: 15px;
+    width: 48%;
+    border: none;
+    color: white;
+    border-radius: 5px;
+}
+
+.green-button {
+    background-color: #28a745;
+}
+
+.green-button:hover {
+    background-color: #218838;
+}
+
+.red-button {
+    background-color: #dc3545;
+}
+
+.red-button:hover {
+    background-color: #c82333;
+}
+
+/* Calibration Steps */
+.calibration-steps {
+    margin-top: 40px;
+    text-align: left;
+    width: 100%;
+}
+
+.calibration-steps h3 {
+    margin-bottom: 10px;
+}
+
+.calibration-steps ol {
+    padding-left: 20px;
+}
+
+.calibration-steps li {
+    margin-bottom: 8px;
+}
+
+/* Important Notice */
+.important-notice {
+    margin-top: 15px;
+    padding: 10px;
+    border-left: 4px solid #ffcc00;
+    background-color: #fffbe6;
+    font-size: 1.1em;
+    color: #856404;
+    border-radius: 5px;
+}
