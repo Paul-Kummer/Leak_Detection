@@ -1,0 +1,10 @@
+{
+  "wifiSSID": "Your_SSID",
+  "wifiPassword": "Your_PASSWORD",
+  "motorSpeed": 1000,
+  "motorAcceleration": 500,
+  "stepsToClose": 2048,
+  "currentMotorPosition": 0,
+  "desiredPosition": 0,
+  "webToken": "secure_token_123"
+}
