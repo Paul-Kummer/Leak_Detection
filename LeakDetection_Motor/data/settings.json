@@ -1,6 +1,6 @@
 {
-  "wifiSSID": "NETGEAR92",
-  "wifiPassword": "breezyunicorn425",
+  "wifiSSID": "yourWiFi",
+  "wifiPassword": "yourPSK",
   "motorSpeed": 500,
   "motorAcceleration": 100,
   "stepsToClose": 2048,
