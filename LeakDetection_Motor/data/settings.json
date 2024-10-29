@@ -1,0 +1,10 @@
+{
+  "wifiSSID": "NETGEAR92",
+  "wifiPassword": "breezyunicorn425",
+  "motorSpeed": 500,
+  "motorAcceleration": 100,
+  "stepsToClose": 2048,
+  "currentMotorPosition": 0,
+  "desiredPosition": 0,
+  "webToken": "LeakDetection_Motor"
+}

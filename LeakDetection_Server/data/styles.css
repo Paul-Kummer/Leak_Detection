@@ -1,0 +1,219 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Styling */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #007BFF;
+    color: white;
+    padding: 20px;
+    font-size: 2em;
+}
+
+/* Content Layout */
+.content-container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Side Navigation */
+.side-nav {
+    background-color: #f4f4f4;
+    width: 200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+    .nav-link:hover, .nav-link.active {
+        background-color: #007BFF;
+        color: white;
+    }
+
+/* Main Content */
+.main-container {
+    flex-grow: 1;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+}
+
+/* Controls and Retro Display Alignment */
+.controls-wrapper {
+    display: flex;
+    gap: 20px;
+    width: 99%;
+    height: 40%; /* Adjusted height */
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Slider Container */
+.slider-container {
+    border: 3px solid #808080;
+    padding: 20px;
+    width: 70%; /* Occupies 70% width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    text-align: center;
+    
+}
+
+/* Centered Slider */
+.slider {
+    width: 80%;
+}
+
+/* Slider Value */
+.slider-value {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+/* Stop Button */
+.stop-btn-wrapper {
+    width: 80%; /* Same width as the slider */
+    margin-top: 15px;
+}
+
+.stop-button {
+    background-color: #FF6347;
+    border: 2px solid #8B0000;
+    padding: 15px;
+    width: 100%; /* Takes full width of the wrapper */
+    box-sizing: border-box;
+}
+
+/* Button Layout */
+.btn-container {
+    display: flex;
+    width: 80%; /* Same width as the stop button */
+    gap: 0%; /* Space between buttons */
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.button {
+    padding: 15px;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+/* Button Widths */
+.close-button {
+    background-color: #dc3545;
+    width: 25%; /* 25% of the stop button width */
+}
+
+.set-button {
+    background-color: #007BFF;
+    width: 50%; /* 40% of the stop button width */
+}
+
+.open-button {
+    background-color: #28a745;
+    width: 25%; /* 25% of the stop button width */
+}
+
+/* Retro Display */
+.retro-display-wrapper {
+    border-top: 20px solid #0E4D64;
+    border-bottom: 20px solid #0E4D64;
+    border-left: 5px solid #0E4D64;
+    border-right: 5px solid #0E4D64;
+    background-color: black;
+    width: 30%; /* Takes up remaining 30% width */
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    vertical-align: top;
+}
+
+/* Retro Display Title */
+.retro-display-title {
+    background-color: #D3D3D3;
+    color: black;
+    font-weight: bold;
+    padding: 10px;
+    width: 95%;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+/* Segmented Display */
+.segment-display {
+    font-family: 'Digital-7', 'Courier New', monospace;
+    font-size: 8em;
+    color: #00FF00;
+    text-shadow: 0 0 10px #00FF00, 0 0 20px #00FF00;
+    background-color: black;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Alerts Table Container */
+.alerts-table-container {
+    align-self: center;
+    width: 100%;
+    border: 3px solid #808080;
+    padding: 10px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: auto; /* Adjusted to match controls/retro display height */
+}
+
+.alerts-table {
+    width: 80%;
+    border-collapse: collapse;
+}
+
+    .alerts-table th, .alerts-table td {
+        border: 1px solid #808080;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .alerts-table th {
+        background-color: #D3D3D3;
+        font-weight: bold;
+    }

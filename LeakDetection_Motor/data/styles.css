@@ -1,0 +1,228 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+/* Header Styling */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #007BFF;
+    color: white;
+    padding: 20px;
+    font-size: 2em;
+}
+
+.header-title {
+    font-weight: bold;
+}
+
+.header-ip {
+    font-size: 0.9rem;
+    color: black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px; /* Prevent overflow */
+}
+
+
+/* Content Layout */
+.content-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Side Navigation */
+.side-nav {
+    background-color: #f4f4f4;
+    width: 200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: #007BFF;
+    color: white;
+}
+
+/* Main Content (Shared) */
+.main-container {
+    flex-grow: 1;
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Form Styling for Settings Page */
+.form-container {
+    width: 100%;
+    display: grid;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* Button Styling */
+.set-button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 15px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.set-button:hover {
+    background-color: #0056b3;
+}
+
+/* Status Message */
+#statusMessage {
+    margin-top: 15px;
+    color: green;
+    font-size: 1.1em;
+}
+
+/* Description and Calibration Steps */
+.description {
+    margin-bottom: 20px;
+}
+
+.description ul {
+    margin-top: 10px;
+}
+
+/* Step Control Container (Calibration) */
+.step-control-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 40px 0; /* Adds space above and below */
+    gap: 15px;
+}
+
+.step-select-wrapper {
+    text-align: center;
+    width: 50%;
+}
+
+select {
+    font-size: 1.5em;
+    padding: 10px;
+    width: 100%;
+}
+
+/* Large Buttons for Calibration */
+.large-button {
+    font-size: 2em;
+    padding: 20px;
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.large-button:hover {
+    background-color: #0056b3;
+}
+
+/* Position Control Buttons (Calibration) */
+.position-control-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.position-button {
+    font-size: 1em;
+    padding: 15px;
+    width: 48%; /* Ensures the buttons are side by side */
+    border: none;
+    color: white;
+    border-radius: 5px;
+}
+
+.green-button {
+    background-color: #28a745;
+}
+
+.green-button:hover {
+    background-color: #218838;
+}
+
+.red-button {
+    background-color: #dc3545;
+}
+
+.red-button:hover {
+    background-color: #c82333;
+}
+
+/* Calibration Steps */
+.calibration-steps {
+    margin-top: 30px;
+    text-align: left;
+    width: 100%;
+}
+
+.calibration-steps h3 {
+    margin-bottom: 10px;
+}
+
+.calibration-steps ol {
+    padding-left: 20px;
+}
+
+.calibration-steps li {
+    margin-bottom: 8px;
+}
+
+/* Important Notice */
+.important-notice {
+    margin-top: 15px;
+    padding: 10px;
+    border-left: 4px solid #ffcc00;
+    background-color: #fffbe6;
+    font-size: 1.1em;
+    color: #856404;
+    border-radius: 5px;
+}
