@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
     <title>Leak Detection - Settings</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header style="display: flex; justify-content: space-between; align-items: center;">
+    <header>
         <span>Leak Detection - Settings</span>
         <span id="ipAddress" class="header-ip"></span>
     </header>
@@ -21,13 +21,33 @@
         </nav>
 
         <div class="main-container">
-            <div id="main-content">
-                <h2>Setup</h2>
-                <p>This is the setup page where you can configure system settings for your Leak Detection devices.</p>
-            </div>
+            <h2>Edit Settings</h2>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="wifiSSID">Wi-Fi SSID:</label>
+                    <input type="text" id="wifiSSID" placeholder="WiFi SSID">
+                </div>
+                <div class="form-group">
+                    <label for="wifiSSID">Wi-Fi Password:</label>
+                    <input type="password" id="wifiPassword" placeholder="WiFi Password" />
+                </div>
+                <div class="form-group">
+                    <label for="wifiSSID">Web Token:</label>
+                    <input type="text" id="webToken" placeholder="Web Token" />
+                </div>
+                <div class="form-group">
+                    <label for="wifiSSID">Motor IP:</label>
+                    <input type="text" id="motorIP" placeholder="Motor IP" />
+                </div>
+                
+                <button type="submit" class="save-button">Save Settings</button>
+            </form>
+
+            <p id="statusMessage"></p>
         </div>
     </div>
-    <script src="indexScripts.js"></script>
+
+    <script src="indexScripts.js" defer></script>
 
 </body>
 </html>

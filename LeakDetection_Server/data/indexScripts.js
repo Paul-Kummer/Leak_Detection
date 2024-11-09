@@ -1,58 +1,95 @@
 let pollInterval = null;
-let fastPolling = false;  // Track if fast polling is active
-let lastPosition = -1;  // Track the previous valve position
-const timeoutDuration = 5000;  // 5 seconds timeout
+let fastPolling = false;
 
-// Make the DOMContentLoaded event handler async
 document.addEventListener("DOMContentLoaded", async function () {
-    const slider = document.getElementById("valveSlider");
+    console.log("DOM fully loaded and parsed.");
 
-    if (!slider) {
-        console.error('Slider element not found in the DOM.');
-        return;
+    // Check for and handle the slider, if it exists
+    const slider = document.getElementById("valveSlider");
+    if (slider) {
+        console.log("Slider detected, adding event listeners.");
+        slider.addEventListener("input", updateSliderValue);
+
+        document.querySelector(".set-button")?.addEventListener("click", () => {
+            setSliderValue(parseInt(slider.value, 10));
+        });
+    } else {
+        console.warn("Slider not found, skipping slider setup.");
     }
 
-    // Fetch and display the IP address
-    await fetchIPAddress();
+    // Check for and handle the settings form, if it exists
+    const form = document.getElementById('settingsForm');
+    if (form) {
+        console.log("Settings form detected, adding event listener.");
 
-    slider.addEventListener("input", updateSliderValue);
+        await loadSettings();  // Load settings if the form exists
 
-    document.querySelector(".close-button").addEventListener("click", () => setSliderValue(0));
-    document.querySelector(".open-button").addEventListener("click", () => setSliderValue(100));
-    document.querySelector(".set-button").addEventListener("click", () => {
-        const sliderValue = slider.value;
-        sendDesiredPosition(sliderValue);
-        startPolling(true);  // Start fast polling
-    });
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();  // Prevent page refresh
+            console.log("Saving settings...");
+            await saveSettings();
+        });
+    } else {
+        console.warn("Settings form not found, skipping form setup.");
+    }
 
-    document.querySelector(".stop-button").addEventListener("click", async () => {
+    // Add event listeners for buttons, if they exist
+    document.querySelector(".close-button")?.addEventListener("click", () => setSliderValue(0));
+    document.querySelector(".open-button")?.addEventListener("click", () => setSliderValue(100));
+
+    document.querySelector(".stop-button")?.addEventListener("click", async () => {
         try {
             const response = await fetch('/getValvePosition');
             if (!response.ok) throw new Error('Failed to fetch valve position');
             const data = await response.json();
             console.log(`Setting desired position to current: ${data.valvePosition}%`);
-            sendDesiredPosition(data.valvePosition);
+            setSliderValue(data.valvePosition)
         } catch (error) {
             console.error('Error fetching valve position:', error);
         }
     });
 
-    // Start regular polling on page load
-    startPolling(false);
+    // Fetch and display the IP address, if the element exists
+    const ipAddressElement = document.getElementById('ipAddress');
+    if (ipAddressElement) {
+        console.log("Fetching IP address...");
+        await fetchIPAddress();
+    } else {
+        console.warn("IP address element not found.");
+    }
+
+    // Start regular polling only if a slider exists
+    if (slider) startPolling(false);
 });
 
 function updateSliderValue() {
     const slider = document.getElementById("valveSlider");
     const display = document.getElementById("sliderValueDisplay");
-    display.innerHTML = `${slider.value}%`;
+    if (slider && display) {
+        display.innerHTML = `${slider.value}%`;
+    }
 }
 
 function setSliderValue(value) {
     const slider = document.getElementById("valveSlider");
-    slider.value = value;
-    updateSliderValue();
-    sendDesiredPosition(value);
-    startPolling(true);  // Start fast polling
+    if (slider) {
+        slider.value = value;
+        console.log(`Setting slider to: ${value}%`);
+        updateSliderValue();
+        sendDesiredPosition(value);
+        startPolling(true);  // Start fast polling if needed
+    } else {
+        console.warn("Slider element not found.");
+    }
+}
+
+function updateSliderValue() {
+    const slider = document.getElementById("valveSlider");
+    const display = document.getElementById("sliderValueDisplay");
+    if (slider && display) {
+        display.textContent = `${slider.value}%`;
+        console.log(`Slider display updated to: ${slider.value}%`);
+    }
 }
 
 async function sendDesiredPosition(value) {
@@ -61,8 +98,11 @@ async function sendDesiredPosition(value) {
     try {
         const response = await fetch('/controlValve', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ desiredPosition: value })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'LeakDetection_Motor'
+            },
+            body: JSON.stringify({ desiredPosition: value })
         });
 
         if (!response.ok) {
@@ -76,7 +116,14 @@ async function sendDesiredPosition(value) {
     }
 }
 
+
 function startPolling(fast = false) {
+    const slider = document.getElementById("valveSlider");
+    if (!slider) {
+        console.warn("Slider not found, polling skipped.");
+        return;
+    }
+
     if (pollInterval) clearInterval(pollInterval);  // Clear any existing polling
 
     fastPolling = fast;  // Set polling mode
@@ -90,7 +137,7 @@ function startPolling(fast = false) {
             console.log('Current valve position:', data.valvePosition);
             updateValvePositionDisplay(data.valvePosition);
 
-            if (fastPolling && data.valvePosition === parseInt(document.getElementById("valveSlider").value)) {
+            if (fastPolling && data.valvePosition === parseInt(slider.value)) {
                 console.log('Valve reached the desired position');
                 stopFastPolling();  // Stop fast polling if goal reached
             }
@@ -104,7 +151,9 @@ function startPolling(fast = false) {
 
 function updateValvePositionDisplay(position) {
     const retroDisplay = document.getElementById("currentValvePosition");
-    retroDisplay.innerHTML = `${position}%`;
+    if (retroDisplay) {
+        retroDisplay.innerHTML = `${position}%`;
+    }
 }
 
 function stopFastPolling() {
@@ -112,15 +161,66 @@ function stopFastPolling() {
     startPolling(false);  // Switch to regular polling
 }
 
-// Fetch and display the IP address
 async function fetchIPAddress() {
     try {
         const response = await fetch('/getIPAddress');
         if (!response.ok) throw new Error('Failed to fetch IP address');
         const data = await response.json();
         const ipAddressElement = document.getElementById('ipAddress');
-        ipAddressElement.textContent = `IP: ${data.ip}`;
+        if (ipAddressElement) {
+            ipAddressElement.textContent = `IP: ${data.ip}`;
+        }
     } catch (error) {
         console.error('Failed to fetch IP address:', error);
+    }
+}
+
+async function loadSettings() {
+    try {
+        const response = await fetch('/settings.json');
+        if (!response.ok) throw new Error('Failed to load settings');
+        const settings = await response.json();
+
+        // Null checks instead of optional chaining for older browsers
+        const ssidElement = document.getElementById('wifiSSID');
+        if (ssidElement) ssidElement.value = settings.wifiSSID || "";
+
+        const passwordElement = document.getElementById('wifiPassword');
+        if (passwordElement) passwordElement.value = settings.wifiPassword || "";
+
+        const tokenElement = document.getElementById('webToken');
+        if (tokenElement) tokenElement.value = settings.webToken || "";
+
+        const motorIPElement = document.getElementById('motorIP');
+        if (motorIPElement) motorIPElement.value = settings.motorIP || "";
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+
+async function saveSettings() {
+    const settings = {
+        wifiSSID: document.getElementById('wifiSSID')?.value || "",
+        wifiPassword: document.getElementById('wifiPassword')?.value || "",
+        webToken: document.getElementById('webToken')?.value || "",
+        motorIP: document.getElementById('motorIP')?.value || ""
+    };
+
+    try {
+        const response = await fetch('/saveSettings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+
+        if (response.ok) {
+            document.getElementById('statusMessage').textContent = 'Settings saved successfully!';
+        } else {
+            throw new Error('Failed to save settings');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        document.getElementById('statusMessage').textContent = 'Error saving settings.';
     }
 }

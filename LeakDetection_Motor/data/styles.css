@@ -23,14 +23,14 @@ header {
     font-weight: bold;
 }
 
-.header-ip {
+/*.header-ip {
     font-size: 0.9rem;
     color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px; /* Prevent overflow */
-}
+    max-width: 200px;*/ /* Prevent overflow */
+/*}*/
 
 
 /* Content Layout */

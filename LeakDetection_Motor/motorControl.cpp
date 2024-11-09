@@ -1,5 +1,6 @@
 #include "motorControl.h"
 #include "settings.h"
+#include "webServer.h"
 #include <FS.h>          // Generic file system support
 #include <LittleFS.h>    // LittleFS support
 
@@ -20,9 +21,15 @@ void initializeMotor() {
 }
 
 void setDesiredPosition(int percentage) {
+    // Allow the motor settings to change
+    loadSettings();
+    motor.setMaxSpeed(motorSpeed);
+    motor.setAcceleration(motorAcceleration);
+    
     // Calculate desired position based on the percentage of steps to close
     desiredPosition = map(percentage, 0, 100, 0, stepsToClose);
 
+    Serial.printf("Changing desired position to %d%, Speed: %d, Acceleration: %d\n", percentage, motorSpeed, motorAcceleration); 
     motor.moveTo(desiredPosition);  // Move motor to the desired position
 
     // Update current position and save it
@@ -32,10 +39,14 @@ void setDesiredPosition(int percentage) {
 
 void runMotorControl() {
     if (motor.distanceToGo() != 0) {
+        currentMotorPosition = motor.currentPosition();
+        Serial.printf("Desired position %d%\nCurrentPostion: %d\nSpeed: %d\nAcceleration: %d\n", desiredPosition, currentMotorPosition, motorSpeed, motorAcceleration); 
         motor.run();  // Run the motor until it reaches the desired position
+        broadcastMotorPosition(true);
     }
     else
     {
+        broadcastMotorPosition(false);
         motor.disableOutputs();  // This turns off motor signals
     }
 }

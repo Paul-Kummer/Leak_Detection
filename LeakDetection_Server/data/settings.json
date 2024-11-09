@@ -1,0 +1,6 @@
+{
+  "wifiSSID": "NETGEAR92",
+  "wifiPassword": "breezyunicorn425",
+  "webToken": "LeakDetection_Motor",
+  "motorIP": "192.168.1.2"
+}

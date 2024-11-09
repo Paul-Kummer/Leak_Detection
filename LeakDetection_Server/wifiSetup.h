@@ -2,7 +2,7 @@
 #define WIFI_SETUP_H
 
 #include <ESP8266WiFi.h>
-#include "settings.h"  // WiFi credentials from settings.h
+#include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
 // Function declarations

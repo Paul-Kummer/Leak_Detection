@@ -3,11 +3,18 @@
 #include "settings.h"
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
 #include <LittleFS.h>  
 
 ESP8266WebServer server(80);  // Create web server on port 80
+WiFiUDP udp;
+const unsigned int BROADCAST_PORT = 4210;
+unsigned long lastBroadcastTime = 0;
+unsigned long slowBroadcastInterval = 5000;
+unsigned long fastBroadcastInterval = 1000;
 
 void initializeWebServer() {
     // Routes
@@ -24,6 +31,7 @@ void initializeWebServer() {
     server.on("/getSettings", HTTP_GET, handleGetSettings);
     server.on("/saveSettings", HTTP_POST, handleSaveSettings);
     server.on("/getMotorPosition", HTTP_GET, handleGetMotorPosition);
+    server.on("/setDesiredPosition", HTTP_POST, handleSetDesiredPosition);
 
     server.onNotFound(handleNotFound);  // 404 handler
 
@@ -93,6 +101,7 @@ void handleSetClosedPosition() {
 
     stepsToClose = motor.currentPosition();
     Serial.printf("Steps to Close: %d\n", stepsToClose);
+    motor.move(-stepsToClose);
 
     StaticJsonDocument<100> response;
     response["status"] = "success";
@@ -103,7 +112,6 @@ void handleSetClosedPosition() {
 
     server.send(200, "application/json", jsonResponse);
 }
-
 
 void handleGetSettings() {
     StaticJsonDocument<200> doc;
@@ -123,6 +131,42 @@ void handleGetSettings() {
     Serial.println("Settings sent to client.");
 }
 
+void handleSetDesiredPosition() {
+    if (server.hasHeader("Authorization")) {
+        String token = server.header("Authorization");
+
+        // Check if the provided token matches the expected token
+        if (token == webToken) {
+            // Parse the JSON body
+            StaticJsonDocument<200> doc;
+            DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+            if (error) {
+                Serial.println("Failed to parse JSON in handleSetDesiredPosition.");
+                server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+                return;
+            }
+
+            int newPercentage = doc["desiredPosition"] | -1;
+            if (newPercentage == -1) {
+                Serial.println("desiredPosition not found in JSON.");
+                server.send(400, "application/json", "{\"error\":\"desiredPosition not found\"}");
+                return;
+            }
+
+            Serial.printf("Received new position of: %d%\n", newPercentage);
+            setDesiredPosition(newPercentage);
+            server.send(200, "application/json", "{\"status\":\"success\"}");
+        }
+        else {
+            server.send(403, "application/json", "{\"error\":\"Unauthorized\"}");
+        }
+    }
+    else {
+        server.send(401, "application/json", "{\"error\":\"Missing token\"}");
+    }
+}
+
 void handleGetMotorPosition() {
     StaticJsonDocument<100> doc;
     doc["currentPosition"] = motor.currentPosition();
@@ -135,7 +179,7 @@ void handleGetMotorPosition() {
 }
 
 void handleSaveSettings() {
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<512> doc; // Increased size for all settings
     DeserializationError error = deserializeJson(doc, server.arg("plain"));
 
     if (error) {
@@ -144,11 +188,38 @@ void handleSaveSettings() {
         return;
     }
 
+    // Set values from parsed JSON
+    wifiSSID = doc["wifiSSID"] | wifiSSID;
+    wifiPassword = doc["wifiPassword"] | wifiPassword;
+    motorSpeed = doc["motorSpeed"] | motorSpeed;
+    motorAcceleration = doc["motorAcceleration"] | motorAcceleration;
     stepsToClose = doc["stepsToClose"] | stepsToClose;
-    saveSettings();  // Save the settings
+    webToken = doc["webToken"] | webToken;
 
+    // Call function to save settings to file
+    saveSettings();
+
+    // Send success response
     server.send(200, "application/json", "{\"status\":\"success\"}");
-    Serial.printf("Saved steps to closed: %d\n", stepsToClose);
+    Serial.println("Settings saved successfully.");
+}
+
+void broadcastMotorPosition(bool fastUpdate) {
+    // Check if it's time to broadcast
+    if ( millis() - lastBroadcastTime >= (fastUpdate ? fastBroadcastInterval : slowBroadcastInterval)) {
+        lastBroadcastTime = millis();  // Update last broadcast time
+
+        if (WiFi.status() == WL_CONNECTED) {
+            int percentagePosition = static_cast<int>((static_cast<float>(currentMotorPosition + 1) / stepsToClose) * 100);
+
+            // Broadcast the integer percentage over UDP
+            udp.beginPacket("255.255.255.255", BROADCAST_PORT);  // Use broadcast address
+            udp.print(percentagePosition);
+            udp.endPacket();
+
+            Serial.printf("Broadcasting motor position as percentage: %d%%\n", percentagePosition);
+        }
+    }
 }
 
 void handleGetIPAddress() {
@@ -162,4 +233,3 @@ void handleGetIPAddress() {
     server.send(200, "application/json", jsonResponse);
     Serial.printf("Sent IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
-

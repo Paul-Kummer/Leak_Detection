@@ -30,20 +30,30 @@ void initializeWiFi() {
 
 bool connectToWiFi() {
     WiFi.mode(WIFI_STA);  // Set WiFi to station mode (client)
-    WiFi.begin(STASSID, STAPSK);  // Connect using credentials from settings.h
+    WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
 
     Serial.print("Connecting to WiFi");
+    unsigned long startTime = millis();
+
+    // Wait until connected or timeout after 30 seconds
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
+        
+        // Timeout check to avoid infinite loop
+        if (millis() - startTime >= 30000) {  
+            Serial.println("\nFailed to connect to WiFi");
+            return false;
+        }
     }
 
     Serial.println("\nConnected to WiFi");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
-    return isWiFiConnected();
+    return true;
 }
+
 
 void startAccessPoint() {
     WiFi.mode(WIFI_AP);  // Set Wi-Fi mode to access point

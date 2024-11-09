@@ -60,16 +60,5 @@
     </div>
 
     <script src="scripts.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const response = await fetch('/getIPAddress');
-                const data = await response.json();
-                document.getElementById('ipAddress').textContent = `IP: ${data.ip}`;
-            } catch (error) {
-                console.error('Failed to fetch IP address:', error);
-            }
-        });
-    </script>
 </body>
 </html>

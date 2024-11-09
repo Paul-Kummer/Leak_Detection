@@ -21,18 +21,22 @@ void initializeDisplay() {
 
 void displayInfo(const String &dispInfo) {
     display.clearDisplay();
-    int textSize = (dispInfo.length() > 3) ? 4 : 6;
-    display.setTextSize(textSize);
     display.setTextColor(SSD1306_WHITE);
 
+    // Adjust the text size more dynamically
+    int textSize = (dispInfo.length() > 4) ? 3 : 5;
+    display.setTextSize(textSize);
+
+    // Calculate text width and height for centering
     int16_t x1, y1;
     uint16_t width, height;
     display.getTextBounds(dispInfo, 0, 0, &x1, &y1, &width, &height);
 
+    // Center the text
     int x = (SCREEN_WIDTH - width) / 2;
     int y = (SCREEN_HEIGHT - height) / 2;
 
     display.setCursor(x, y);
-    display.println(dispInfo);
-    display.display();
+    display.print(dispInfo);  // Use print() instead of println()
+    display.display();  // Refresh the display
 }

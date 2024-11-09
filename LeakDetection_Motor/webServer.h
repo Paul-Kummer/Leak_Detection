@@ -11,6 +11,7 @@ void initializeWebServer();  // Initialize web server and routes
 void setupMDNS();            // Setup mDNS responder
 void serveFile(const char* path, const char* contentType);
 void handleSetPosition();    // Handle motor position updates
+void handleSetDesiredPosition();
 void handleSettingsPage();   // Serve the settings page
 void handleGetSettings();
 void handleSaveSettings();   // Save new settings from the form
@@ -19,7 +20,10 @@ void handleMotorControl();
 void handleSetOpenPosition();
 void handleSetClosedPosition();
 void handleGetMotorPosition();
+void broadcastMotorPosition();
 void handleGetIPAddress();
+void handleMotorControl();
+void broadcastMotorPosition(bool);
 
 void handleRoot();
 

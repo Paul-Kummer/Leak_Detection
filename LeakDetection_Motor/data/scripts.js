@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const decrementButton = document.getElementById('decrementButton');
     const setOpenPositionButton = document.getElementById('setOpenPosition');
     const setClosedPositionButton = document.getElementById('setClosedPosition');
+    const settingsForm = document.getElementById('settingsForm');
     const statusMessage = document.getElementById('statusMessage');
 
     // Fetch and display the IP address
@@ -18,24 +19,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Load the settings from the ESP8266
-    try {
-        const response = await fetch('/getSettings');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const settings = await response.json();
+    // Load and save settings functionality
+    if (settingsForm) {
+        // Load settings when form is present
+        await loadSettings();
 
-        // Populate the form fields with the fetched settings
-        document.getElementById('wifiSSID').value = settings.wifiSSID;
-        document.getElementById('wifiPassword').value = settings.wifiPassword;
-        document.getElementById('motorSpeed').value = settings.motorSpeed;
-        document.getElementById('motorAcceleration').value = settings.motorAcceleration;
-        document.getElementById('stepsToClose').value = settings.stepsToClose;
-        document.getElementById('webToken').value = settings.webToken;
-    } catch (error) {
-        console.error('Failed to load settings:', error);
-        displayStatus('Failed to load settings.');
+        settingsForm.addEventListener('submit', async (event) => {
+            event.preventDefault();  // Prevent page refresh
+
+            const wifiSSID = document.getElementById('wifiSSID');
+            const wifiPassword = document.getElementById('wifiPassword');
+            const motorSpeed = document.getElementById('motorSpeed');
+            const motorAcceleration = document.getElementById('motorAcceleration');
+            const stepsToClose = document.getElementById('stepsToClose');
+            const webToken = document.getElementById('webToken');
+
+            // Ensure all required elements are available
+            if (!wifiSSID || !wifiPassword || !motorSpeed || !motorAcceleration || !stepsToClose || !webToken) {
+                console.error('One or more required form elements are missing.');
+                return;
+            }
+
+            // Collect settings from the form fields
+            const settings = {
+                wifiSSID: wifiSSID.value,
+                wifiPassword: wifiPassword.value,
+                motorSpeed: parseInt(motorSpeed.value),
+                motorAcceleration: parseInt(motorAcceleration.value),
+                stepsToClose: parseInt(stepsToClose.value),
+                webToken: webToken.value
+            };
+
+            try {
+                const response = await fetch('/saveSettings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                const result = await response.json();
+                displayStatus(result.status === 'success'
+                    ? 'Settings saved successfully!'
+                    : `Error: ${result.error}`);
+            } catch (error) {
+                console.error('Failed to save settings:', error);
+                displayStatus('Error saving settings.');
+            }
+        });
+    } else {
+        console.log("Settings form not found on this page.");
     }
 
     // Motor control buttons
@@ -82,13 +114,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Load settings from the server and populate form fields
+    async function loadSettings() {
+        try {
+            const response = await fetch('/getSettings');
+            if (!response.ok) throw new Error('Failed to load settings');
+
+            const settings = await response.json();
+
+            // Populate form fields only if elements exist
+            const wifiSSID = document.getElementById('wifiSSID');
+            const wifiPassword = document.getElementById('wifiPassword');
+            const motorSpeed = document.getElementById('motorSpeed');
+            const motorAcceleration = document.getElementById('motorAcceleration');
+            const stepsToClose = document.getElementById('stepsToClose');
+            const webToken = document.getElementById('webToken');
+
+            if (wifiSSID) wifiSSID.value = settings.wifiSSID || '';
+            if (wifiPassword) wifiPassword.value = settings.wifiPassword || '';
+            if (motorSpeed) motorSpeed.value = settings.motorSpeed || 0;
+            if (motorAcceleration) motorAcceleration.value = settings.motorAcceleration || 0;
+            if (stepsToClose) stepsToClose.value = settings.stepsToClose || 0;
+            if (webToken) webToken.value = settings.webToken || '';
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            displayStatus('Failed to load settings.');
+        }
+    }
+
+
     // Fetch and display the IP address
     async function fetchIPAddress() {
         try {
             const response = await fetch('/getIPAddress');
             if (!response.ok) throw new Error('Failed to fetch IP address');
             const data = await response.json();
-            ipAddressElement.textContent = `IP: ${data.ip}`; // Display the IP
+            document.getElementById('ipAddress').textContent = `IP: ${data.ip}`;
         } catch (error) {
             console.error('Failed to fetch IP address:', error);
         }
@@ -104,11 +165,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             const result = await response.json();
-            if (result.status === 'success') {
-                displayStatus(`Motor ${command}ed by ${steps} steps.`);
-            } else {
-                displayStatus(`Error: ${result.error}`);
-            }
+            displayStatus(result.status === 'success'
+                ? `Motor ${command}ed by ${steps} steps.`
+                : `Error: ${result.error}`);
         } catch (error) {
             displayStatus('Failed to communicate with motor.');
             console.error(error);
@@ -139,42 +198,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-// Fetch the motor's current position and save it to the settings
-async function saveStepsToClosed() {
-    try {
-        // Step 1: Fetch the current motor position from the server
-        const response = await fetch('/getMotorPosition', { method: 'GET' });
+    // Fetch the motor's current position and save it to the settings
+    async function saveStepsToClosed() {
+        try {
+            const response = await fetch('/getMotorPosition', { method: 'GET' });
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const data = await response.json();
+            const currentPosition = data.currentPosition;
+            console.log(`Fetched motor position: ${currentPosition}`);
+
+            const saveResponse = await fetch('/saveSettings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stepsToClose: currentPosition })
+            });
+
+            const saveResult = await saveResponse.json();
+            displayStatus(saveResult.status === 'success'
+                ? 'Steps to closed saved successfully.'
+                : `Failed to save steps: ${saveResult.error}`);
+        } catch (error) {
+            console.error('Error saving steps to closed:', error);
+            displayStatus('Failed to save steps to closed.');
         }
-
-        const data = await response.json();
-        const currentPosition = data.currentPosition;
-
-        console.log(`Fetched motor position: ${currentPosition}`);
-
-        // Step 2: Save the current position to settings
-        const saveResponse = await fetch('/saveSettings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stepsToClose: currentPosition })
-        });
-
-        const saveResult = await saveResponse.json();
-        if (saveResult.status === 'success') {
-            console.log('Steps to closed saved successfully.');
-            displayStatus('Steps to closed saved successfully.');
-        } else {
-            console.error('Failed to save steps:', saveResult.error);
-            displayStatus('Failed to save steps.');
-        }
-    } catch (error) {
-        console.error('Error saving steps to closed:', error);
-        displayStatus('Failed to save steps to closed.');
     }
-}
-
 
     // Helper function to display status messages
     function displayStatus(message) {

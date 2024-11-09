@@ -1,14 +1,11 @@
 #include "sensorControl.h"
-#include "motorControl.h"
-#include "valveControl.h"
+#include <Arduino.h>
 
 void setupSensorHandler() {
-    // Sensor initialization code here
+    Serial.println("Setting up sensors...");
+    // Add sensor initialization logic here
 }
 
 void handleSensors() {
-    // Use motor control or other shared functions as needed
-    if (desiredPosition > 0) {
-        runMotorControl();  // Use motor control functions
-    }
+    // Add logic to handle sensor data here
 }
