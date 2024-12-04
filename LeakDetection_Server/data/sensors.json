@@ -1,0 +1,47 @@
+[
+  {
+    "ID": "24:D7:EB:CD:34:72",
+    "Name": "Living Room Sensor",
+    "Location": "Living Room",
+    "Timestamp": "2023-11-26T12:00:00Z",
+    "Status": "Active",
+    "Triggered": false,
+    "Ignored": false
+  },
+  {
+    "ID": "1A:2B:3C:4D:5E:6F",
+    "Name": "Kitchen Sensor",
+    "Location": "Kitchen",
+    "Timestamp": "2023-11-26T12:10:00Z",
+    "Status": "Alert",
+    "Triggered": true,
+    "Ignored": false
+  },
+  {
+    "ID": "AA:BB:CC:DD:EE:FF",
+    "Name": "Bedroom Sensor",
+    "Location": "Bedroom",
+    "Timestamp": "2023-11-26T12:20:00Z",
+    "Status": "No Check-In",
+    "Triggered": false,
+    "Ignored": true
+  },
+  {
+    "ID": "11:22:33:44:55:66",
+    "Name": "Garage Sensor",
+    "Location": "Garage",
+    "Timestamp": "2023-11-26T12:30:00Z",
+    "Status": "Active",
+    "Triggered": false,
+    "Ignored": false
+  },
+  {
+    "ID": "99:88:77:66:55:44",
+    "Name": "Bathroom Sensor",
+    "Location": "Bathroom",
+    "Timestamp": "2023-11-26T12:40:00Z",
+    "Status": "Alert",
+    "Triggered": true,
+    "Ignored": true
+  }
+]

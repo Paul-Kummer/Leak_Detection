@@ -1,67 +1,95 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include <EEPROM.h>
+#include <LittleFS.h>
+#include <ArduinoJson.h>
+#include "settings.h"
+#include "wifiSetup.h"
 
-const int sensorPin = D4;  // Pin connected to the water sensor
-const int THIRTY_MINUTES = 30 * 60 * 1000000;  // 30 minutes in microseconds
-const int TEN_SECONDS = 10 * 1000000;  // 10 seconds in microseconds
+const int sensorPin = D5;  // Pin connected to the sensor
+const unsigned long SLEEP_DURATION = 30 * 1000000;  // 30 seconds in microseconds
+
 WiFiUDP udp;
-
-const char *ssid = "YOUR_SSID";
-const char *password = "YOUR_PASSWORD";
-const char *udpAddress = "192.168.1.255";
-const unsigned int udpPort = 4210;
-
-bool leakDetected = false;
+bool sensorTriggered = false;
 
 void setup() {
     Serial.begin(115200);
-    pinMode(sensorPin, INPUT_PULLUP);  // D4 with pull-up for active-low sensor
+    delay(1000);
 
-    // Check if the sensor triggered the wake-up
-    leakDetected = digitalRead(sensorPin) == LOW;
-    Serial.println(leakDetected ? "Leak detected!" : "No leak detected.");
+    // Initialize LittleFS for settings management
+    if (!LittleFS.begin()) {
+        Serial.println("Failed to initialize file system.");
+        return;
+    }
 
-    connectToWiFi();
+    // Load saved Wi-Fi settings
+    loadSettings();
 
-    if (leakDetected) {
-        // Broadcast every 10 seconds while sensor is triggered
-        for (int i = 0; i < 5 && digitalRead(sensorPin) == LOW; i++) {
-            broadcastStatus(true);
-            delay(10000);  // 10 seconds
-        }
-    } else {
-        // Periodic broadcast if woken up by timer
-        for (int i = 0; i < 5; i++) {
-            broadcastStatus(false);
-            delay(10000);  // 10 seconds
+    // Step 1: Attempt to connect to the saved Wi-Fi network
+    if (!connectToWiFi()) {
+        Serial.println("Failed to connect to saved Wi-Fi. Connecting to Master AP...");
+
+        // Step 2: Connect to Master AP and fetch new settings
+        if (connectToMaster() && fetchSettingsFromMaster()) {
+            Serial.println("New settings retrieved. Reconnecting to Wi-Fi...");
+            connectToWiFi(); // Step 3: Reconnect using updated settings
+        } else {
+            Serial.println("Failed to connect to Master AP or retrieve new settings.");
         }
     }
 
-    // Go back to deep sleep
-    ESP.deepSleep(TEN_SECONDS, WAKE_RF_DEFAULT);
+    // Step 4: Read sensor state
+    pinMode(sensorPin, INPUT);
+    sensorTriggered = digitalRead(sensorPin) == HIGH;
+
+    if (sensorTriggered) {
+        Serial.println("Sensor triggered! Broadcasting alert...");
+        broadcastStatus(true);
+    } else {
+        Serial.println("No sensor trigger. Broadcasting normal status...");
+        broadcastStatus(false);
+    }
+
+    // Step 5: Enter deep sleep
+    Serial.println("Entering deep sleep...");
+    ESP.deepSleep(SLEEP_DURATION, WAKE_RF_DEFAULT);
 }
 
 void loop() {}
 
-void connectToWiFi() {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("\nConnected to WiFi.");
-}
-
+// Broadcast sensor status over UDP
 void broadcastStatus(bool triggered) {
     if (WiFi.status() == WL_CONNECTED) {
-        String jsonData = "{\"ID\":\"Sensor_1\",\"triggered\":" + String(triggered ? "true" : "false") + "}";
-        udp.beginPacket(udpAddress, udpPort);
-        udp.print(jsonData);
-        udp.endPacket();
-        Serial.printf("Broadcasting: %s\n", jsonData.c_str());
+        String macAddress = WiFi.macAddress();
+        String status = triggered ? "ALERT" : "OK";
+
+        // Create JSON message
+        String message = String("{\"ID\":\"") + macAddress + "\",\"Status\":\"" + status + 
+                         "\",\"Triggered\":" + (triggered ? "true" : "false") + "}";
+
+        IPAddress broadcastIP = getBroadcastAddress();
+
+        for (int i = 0; i < 5; i++) {
+            udp.beginPacket(broadcastIP, 4210);
+            udp.print(message);
+            udp.endPacket();
+            delay(300);
+        }
+
+        Serial.printf("Broadcasted to %s: %s\n", broadcastIP.toString().c_str(), message.c_str());
     } else {
-        Serial.println("WiFi not connected.");
+        Serial.println("Wi-Fi not connected. Cannot broadcast.");
     }
+}
+
+// Helper function to calculate the broadcast address
+IPAddress getBroadcastAddress() {
+    IPAddress localIP = WiFi.localIP();
+    IPAddress subnetMask = WiFi.subnetMask();
+    IPAddress broadcastIP;
+
+    for (int i = 0; i < 4; i++) {
+        broadcastIP[i] = (localIP[i] & subnetMask[i]) | (~subnetMask[i] & 0xFF);
+    }
+
+    return broadcastIP;
 }

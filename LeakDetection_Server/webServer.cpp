@@ -6,7 +6,6 @@
 #include <WiFiUdp.h> 
 #include <ESP8266HTTPClient.h>
 
-
 // Define the http server and port
 ESP8266WebServer server(80);
 WiFiUDP udp;
@@ -36,6 +35,13 @@ void InitializeWebServer() {
     server.on("/controlValve", HTTP_POST, handleControlValve);
     server.on("/sensorUpdate", HTTP_POST, handleSensorUpdate);
     server.on("/getIPAddress", HTTP_GET, handleGetIPAddress);
+    server.on("/getAlerts", HTTP_GET, handleGetAlerts);
+    server.on("/getSavedSensors", HTTP_GET, handleGetSavedSensors);
+    server.on("/getAvailableSensors", HTTP_GET, handleGetAvailableSensors);
+    server.on("/updateIgnoredStatus", HTTP_POST, handleUpdateIgnoredStatus);
+    server.on("/handleAddSensor", HTTP_POST, handleAddSensor);
+    server.on("/handleRemoveSensor", HTTP_POST, handleRemoveSensor);
+    server.on("/getSensors", HTTP_GET, handleGetSensors);
     server.on("/favicon.ico", HTTP_GET, []() {server.send(204);} );
     server.onNotFound(handleNotFound);
 
@@ -71,11 +77,6 @@ void listFiles() {
     }
 }
 
-void handleGetValvePosition() {
-    String jsonResponse = "{\"valvePosition\": " + String(valvePosition) + "}";
-    server.send(200, "application/json", jsonResponse);
-}
-
 void handleControlValve() {
     if (server.hasHeader("Authorization") && server.header("Authorization") == "LeakDetection_Motor") {
         // Parse JSON body
@@ -108,9 +109,6 @@ void handleControlValve() {
         server.send(403, "application/json", "{\"error\":\"Unauthorized\"}");
     }
 }
-
-
-
 
 void handleSensorUpdate() {
     if (server.hasArg("mac") && server.hasArg("battery") && server.hasArg("leakDetected")) {
@@ -182,9 +180,6 @@ void sendDesiredPositionToMotorNode(int position) {
     http.end();
 }
 
-
-
-
 void handleNotFound() {
     Serial.printf("404 Not Found: %s %s\n", 
                   server.method() == HTTP_GET ? "GET" : "POST", 
@@ -204,20 +199,369 @@ void handleGetIPAddress() {
     Serial.printf("Sent IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
+void handleGetAlerts() {
+    StaticJsonDocument<2048> jsonDoc;
+    JsonArray alertArray = jsonDoc.to<JsonArray>();
+
+    for (const auto& sensor : sensorControl.getSensors()) {
+        JsonObject alertObj = alertArray.createNestedObject();
+        alertObj["Timestamp"] = sensor.timestamp;
+        alertObj["Name"] = sensor.name;
+        alertObj["Location"] = sensor.location;
+        alertObj["ID"] = sensor.id;
+        alertObj["Status"] = sensor.status;
+        alertObj["Triggered"] = sensor.triggered;
+        alertObj["Ignored"] = sensor.ignored;
+    }
+
+    String response;
+    serializeJson(jsonDoc, response);
+    server.send(200, "application/json", response);
+}
+
+void handleGetSavedSensors() {
+    StaticJsonDocument<1024> jsonDoc;
+    JsonArray savedSensors = jsonDoc.to<JsonArray>();
+
+    for (const Sensor& sensor : sensorControl.getSensors()) {
+        JsonObject sensorObj = savedSensors.createNestedObject();
+        sensorObj["ID"] = sensor.id;
+        sensorObj["Name"] = sensor.name;
+        sensorObj["Location"] = sensor.location;
+        sensorObj["Timestamp"] = sensor.timestamp;
+        sensorObj["Status"] = sensor.status;
+        sensorObj["Triggered"] = sensor.triggered;
+        sensorObj["Ignored"] = sensor.ignored;
+    }
+
+    String response;
+    serializeJson(jsonDoc, response);
+    server.send(200, "application/json", response);
+}
+
+void handleUpdateIgnoredStatus() {
+    if (!server.hasArg("plain")) {
+        server.send(400, "application/json", "{\"error\":\"No JSON body provided\"}");
+        return;
+    }
+
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+    if (error) {
+        server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+        Serial.println("Failed to parse JSON in updateIgnoredStatus.");
+        return;
+    }
+
+    const char* sensorId = doc["ID"];
+    bool ignoredStatus = doc["Ignored"] | false;
+
+    if (!sensorId) {
+        server.send(400, "application/json", "{\"error\":\"ID missing\"}");
+        Serial.println("Missing sensor ID in updateIgnoredStatus.");
+        return;
+    }
+
+    Sensor* sensor = sensorControl.getSensorById(sensorId);
+    if (sensor) {
+        sensor->ignored = ignoredStatus;
+        if (sensorControl.saveSensors()) {
+            server.send(200, "application/json", "{\"status\":\"success\"}");
+            Serial.printf("Sensor %s ignored status updated to %s\n", sensorId, ignoredStatus ? "true" : "false");
+        } else {
+            server.send(500, "application/json", "{\"error\":\"Failed to save sensors\"}");
+            Serial.println("Failed to save sensors in updateIgnoredStatus.");
+        }
+    } else {
+        server.send(404, "application/json", "{\"error\":\"Sensor not found\"}");
+        Serial.printf("Sensor %s not found in updateIgnoredStatus.\n", sensorId);
+    }
+}
+
+void handleAddSensor() {
+    if (!server.hasArg("plain")) {
+        server.send(400, "application/json", "{\"error\":\"No JSON body provided\"}");
+        return;
+    }
+
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+    if (error) {
+        server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+        Serial.println("Failed to parse JSON in addSensor.");
+        return;
+    }
+
+    const char* sensorId = doc["ID"];
+    if (!sensorId) {
+        server.send(400, "application/json", "{\"error\":\"Sensor ID missing\"}");
+        Serial.println("Sensor ID missing in addSensor.");
+        return;
+    }
+
+    // Check if the sensor exists in availableSensors
+    Sensor sensor;
+    bool found = sensorControl.getAvailableSensorById(sensorId, sensor);
+    if (found) {
+        // Copy the sensor to savedSensors and update timestamp
+        sensor.timestamp = sensorControl.generateISO8601Timestamp();
+        if (sensorControl.addSavedSensor(sensor)) {
+            // Remove the sensor from availableSensors
+            sensorControl.removeAvailableSensor(sensorId);
+
+            server.send(200, "application/json", "{\"status\":\"success\"}");
+            Serial.printf("Sensor %s moved to saved sensors.\n", sensorId);
+            return;
+        } else {
+            server.send(500, "application/json", "{\"error\":\"Failed to save sensor\"}");
+            Serial.println("Failed to save sensor in addSensor.");
+        }
+    } else {
+        server.send(404, "application/json", "{\"error\":\"Sensor not found in available sensors\"}");
+        Serial.printf("Sensor %s not found in available sensors.\n", sensorId);
+    }
+}
+
+void handleRemoveSensor() {
+    if (!server.hasArg("plain")) {
+        server.send(400, "application/json", "{\"error\":\"No JSON body provided\"}");
+        return;
+    }
+
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+    if (error) {
+        server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+        Serial.println("Failed to parse JSON in removeSensor.");
+        return;
+    }
+
+    const char* sensorId = doc["ID"];
+    if (!sensorId) {
+        server.send(400, "application/json", "{\"error\":\"Sensor ID missing\"}");
+        Serial.println("Sensor ID missing in removeSensor.");
+        return;
+    }
+
+    // Check if the sensor exists in savedSensors
+    Sensor* sensor = sensorControl.getSensorById(sensorId);
+    if (sensor) {
+        // Copy the sensor to availableSensors and update timestamp
+        Sensor newSensor = *sensor;  // Copy sensor data
+        newSensor.timestamp = sensorControl.generateISO8601Timestamp();
+        sensorControl.addRecentSensor(newSensor);
+
+        // Remove the sensor from savedSensors
+        if (sensorControl.removeSavedSensor(sensorId)) {
+            server.send(200, "application/json", "{\"status\":\"success\"}");
+            Serial.printf("Sensor %s moved to available sensors.\n", sensorId);
+            return;
+        } else {
+            server.send(500, "application/json", "{\"error\":\"Failed to remove sensor\"}");
+            Serial.println("Failed to remove sensor in removeSensor.");
+        }
+    } else {
+        server.send(404, "application/json", "{\"error\":\"Sensor not found in saved sensors\"}");
+        Serial.printf("Sensor %s not found in saved sensors.\n", sensorId);
+    }
+}
+
 void listenForUdp() {
     int packetSize = udp.parsePacket();
     if (packetSize) {
         int len = udp.read(incomingPacket, sizeof(incomingPacket) - 1);
-        if (len > 0) incomingPacket[len] = '\0';  // Null-terminate the packet
+        if (len > 0) {
+            incomingPacket[len] = '\0';  // Null-terminate the packet
+        }
 
-        int receivedPercentage = atoi(incomingPacket);  // Convert to integer
-        valvePosition = receivedPercentage;  // Update shared variable
+        Serial.printf("Received raw UDP packet: '%s'\n", incomingPacket);
 
-        Serial.printf("Updated valve position to %d%%\n", valvePosition);
+        // Check if the packet looks like JSON
+        if (incomingPacket[0] == '{') {
+            StaticJsonDocument<256> jsonDoc;
+            DeserializationError error = deserializeJson(jsonDoc, incomingPacket);
 
-        // Optionally, acknowledge the packet (optional)
-        udp.beginPacket(udp.remoteIP(), udp.remotePort());
-        udp.printf("Acknowledged: %d%%", receivedPercentage);
-        udp.endPacket();
+            if (!error) {
+                Serial.println("Valid JSON received.");
+                checkSensorBroadcast(jsonDoc);
+            } else {
+                Serial.printf("JSON parsing failed: %s\n", error.c_str());
+            }
+        } else {
+            handleNonJsonUdpPacket(incomingPacket);
+        }
     }
+}
+
+void handleNonJsonUdpPacket(const char* packet) {
+    String packetStr(packet);
+    packetStr.trim();  // Remove leading and trailing whitespace
+
+    // Validate that the packet is numeric
+    bool isNumeric = true;
+    for (unsigned int i = 0; i < packetStr.length(); i++) {
+        if (!isdigit(packetStr[i])) {
+            isNumeric = false;
+            break;
+        }
+    }
+
+    if (!isNumeric) {
+        Serial.printf("Invalid UDP packet: '%s'. Ignoring.\n", packet);
+        return;
+    }
+
+    // Convert to integer
+    int valvePosition = packetStr.toInt();
+    if (valvePosition >= 0 && valvePosition <= 100) {
+        Serial.printf("Valid valve position received via UDP: %d\n", valvePosition);
+        handleValvePosition(valvePosition);
+    } else {
+        Serial.printf("Out-of-range valve position: %d. Ignoring.\n", valvePosition);
+    }
+}
+
+
+// Function to handle valid valve positions
+void handleValvePosition(int position) {
+    // Validate position range again, if necessary
+    if (position < 0 || position > 100) {
+        Serial.printf("Invalid valve position: %d. Ignoring.\n", position);
+        return;
+    }
+
+    // Update valve position globally or notify other components
+    Serial.printf("Updating valve position to: %d\n", position);
+    valvePosition = position;  // Assuming `valvePosition` is a global variable
+}
+
+void handleGetValvePosition() {
+    Serial.printf("Current valve position: %d\n", valvePosition);  // Log the valve position
+    String jsonResponse = "{\"valvePosition\": " + String(valvePosition) + "}";
+    server.send(200, "application/json", jsonResponse);
+}
+
+void checkSensorBroadcast(const StaticJsonDocument<256>& jsonDoc) {
+    const char* id = jsonDoc["ID"];
+    const char* status = jsonDoc["Status"];
+    bool triggered = jsonDoc["Triggered"] | false;
+
+    if (id == nullptr || status == nullptr) {
+        Serial.println("Invalid broadcast: Missing ID or Status");
+        return;
+    }
+
+    Serial.printf("Broadcast received - ID: %s, Status: %s, Triggered: %s\n",
+                  id, status, triggered ? "true" : "false");
+
+    // Check if the sensor exists in the Saved Sensors list
+    Sensor* sensor = sensorControl.getSensorById(std::string(id));
+    if (sensor) {
+        // Update existing sensor's attributes
+        sensor->status = status; // Assuming status can be assigned directly
+        sensor->triggered = triggered;
+        sensor->timestamp = std::to_string(millis() / 1000); // Update timestamp
+        Serial.printf("Sensor %s updated in Saved Sensors.\n", id);
+
+        // Call checkSensorAlert after updating the sensor
+        checkSensorAlert(jsonDoc);
+    } else {
+        // Create a new Sensor object for available sensors
+        Sensor newSensor;
+        newSensor.id = id; // This is MAC address
+        newSensor.status = status; // Assuming status is assignable
+        newSensor.triggered = triggered;
+        newSensor.timestamp = std::to_string(millis() / 1000); // Assign current time
+        newSensor.name = "New Sensor"; // Default name, if applicable
+        newSensor.location = "Unknown"; // Default location, if applicable
+        newSensor.ignored = false; // Default to not ignored
+
+        // Add the new sensor to Available Sensors
+        bool added = sensorControl.addRecentSensor(newSensor);
+        if (added) {
+            Serial.printf("Sensor %s added to Available Sensors.\n", id);
+        } else {
+            Serial.printf("Sensor %s already exists in Available Sensors.\n", id);
+        }
+
+        // Call checkSensorAlert for the new sensor
+        checkSensorAlert(jsonDoc);
+    }
+}
+
+// Status that will trigger the valve to close
+void checkSensorAlert(const StaticJsonDocument<256>& jsonDoc) {
+    const char* id = jsonDoc["ID"] | "Unknown";               // Sensor's MAC address
+    const char* sensorStatus = jsonDoc["Status"] | "Unknown"; // Status: "ok" or "alert"
+    bool sensorTriggered = jsonDoc["Triggered"] | false;      // Triggered: true or false
+
+    // Print received JSON data
+    Serial.printf("Checking alert conditions for sensor ID: %s\n", id);
+
+    // Convert sensorStatus to std::string and lowercase for case-insensitive search
+    std::string statusStr(sensorStatus);
+    std::transform(statusStr.begin(), statusStr.end(), statusStr.begin(), ::tolower); // Convert to lowercase
+
+    // Retrieve the sensor
+    Sensor* sensor = sensorControl.getSensorById(id);
+    if (sensor) {
+        // Check conditions: status contains "alert" (case-insensitive), sensor is triggered, and not ignored
+        if (statusStr.find("alert") != std::string::npos && sensorTriggered && !sensor->ignored) {
+            Serial.printf("Sensor '%s' triggered ALERT and is not ignored. Setting valve position to 0%%.\n", id);
+
+            // Update valve position
+            desiredPosition = 0;
+
+            // Notify the motor node
+            sendDesiredPositionToMotorNode(0);
+        } else {
+            Serial.printf("Sensor '%s' ignored or not alerting. No action taken.\n", id);
+        }
+    } else {
+        Serial.printf("Sensor '%s' not found in saved sensors. Ignoring alert check.\n", id);
+    }
+}
+
+void handleGetSensors() {
+    StaticJsonDocument<4096> jsonDoc;
+    JsonArray sensorArray = jsonDoc.to<JsonArray>();
+
+    for (const auto& sensor : sensorControl.getSensors()) {
+        JsonObject sensorObj = sensorArray.createNestedObject();
+        sensorObj["Timestamp"] = sensor.timestamp;
+        sensorObj["Name"] = sensor.name;
+        sensorObj["Location"] = sensor.location;
+        sensorObj["ID"] = sensor.id;
+        sensorObj["Status"] = sensor.status;
+        sensorObj["Triggered"] = sensor.triggered;
+        sensorObj["Ignored"] = sensor.ignored;
+    }
+
+    String response;
+    serializeJson(jsonDoc, response);
+    server.send(200, "application/json", response);
+}
+
+void handleGetAvailableSensors() {
+    StaticJsonDocument<2048> jsonDoc;
+    JsonArray sensorArray = jsonDoc.to<JsonArray>();
+
+    for (const auto& sensor : sensorControl.getAvailableSensors()) {
+        JsonObject sensorObj = sensorArray.createNestedObject();
+        sensorObj["ID"] = sensor.id;
+        sensorObj["Name"] = sensor.name;
+        sensorObj["Location"] = sensor.location;
+        sensorObj["Timestamp"] = sensor.timestamp;
+        sensorObj["Status"] = sensor.status;
+        sensorObj["Triggered"] = sensor.triggered;
+        sensorObj["Ignored"] = sensor.ignored;
+    }
+
+    String response;
+    serializeJson(jsonDoc, response);
+    server.send(200, "application/json", response);
+    Serial.printf("Sent available sensors: %s\n", response.c_str());
 }

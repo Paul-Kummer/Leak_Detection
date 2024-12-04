@@ -8,7 +8,7 @@
 // Function declarations
 void initializeWiFi();
 bool connectToWiFi();
-void startAccessPoint();
+bool startAccessPoint();
 bool isWiFiConnected();
 IPAddress getLocalIP();
 void updateMDNS();

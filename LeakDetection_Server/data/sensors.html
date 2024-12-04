@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>Leak Detection - Devices</title>
+    <title>Leak Detection - Sensors</title>
 </head>
 <body>
     <header style="display: flex; justify-content: space-between; align-items: center;">
@@ -22,13 +22,44 @@
 
         <div class="main-container">
             <div id="main-content">
-                <h2>Devices</h2>
-                <p>This page provides an overview of all devices connected to the Leak Detection system.</p>
+                <h2>Saved Sensors</h2>
+                <table class="sensors-table" id="savedSensorsTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Timestamp</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Triggered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+
+                <h2>Available Sensors</h2>
+                <table class="sensors-table" id="availableSensorsTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Timestamp</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Triggered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
     <script src="indexScripts.js" defer></script>
-
-
 </body>
 </html>

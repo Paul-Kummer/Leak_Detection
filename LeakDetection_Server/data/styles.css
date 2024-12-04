@@ -29,7 +29,6 @@ header {
     height: 100%;
 }
 
-
 /* Side Navigation */
 .side-nav {
     background-color: #f4f4f4;
@@ -49,7 +48,8 @@ header {
     text-align: center;
 }
 
-    .nav-link:hover, .nav-link.active {
+    .nav-link:hover,
+    .nav-link.active {
         background-color: #007BFF;
         color: white;
     }
@@ -70,7 +70,7 @@ header {
     display: flex;
     gap: 20px;
     width: 100%;
-    height: 40%; /* Adjusted height */
+    height: 40%;
     justify-content: center;
     align-items: center;
     margin-bottom: 20px;
@@ -80,13 +80,12 @@ header {
 .slider-container {
     border: 3px solid #808080;
     padding: 20px;
-    width: 70%; /* Occupies 70% width */
+    width: 70%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 15px;
     text-align: center;
-    
 }
 
 /* Centered Slider */
@@ -102,7 +101,7 @@ header {
 
 /* Stop Button */
 .stop-btn-wrapper {
-    width: 80%; /* Same width as the slider */
+    width: 80%;
     margin-top: 15px;
 }
 
@@ -110,15 +109,15 @@ header {
     background-color: #FF6347;
     border: 2px solid #8B0000;
     padding: 15px;
-    width: 100%; /* Takes full width of the wrapper */
+    width: 100%;
     box-sizing: border-box;
 }
 
 /* Button Layout */
 .btn-container {
     display: flex;
-    width: 80%; /* Same width as the stop button */
-    gap: 0%; /* Space between buttons */
+    width: 80%;
+    gap: 0%;
     justify-content: center;
     margin-top: 15px;
 }
@@ -135,17 +134,17 @@ header {
 /* Button Widths */
 .close-button {
     background-color: #dc3545;
-    width: 25%; /* 25% of the stop button width */
+    width: 25%;
 }
 
 .set-button {
     background-color: #007BFF;
-    width: 50%; /* 40% of the stop button width */
+    width: 50%;
 }
 
 .open-button {
     background-color: #28a745;
-    width: 25%; /* 25% of the stop button width */
+    width: 25%;
 }
 
 /* Retro Display */
@@ -155,8 +154,7 @@ header {
     border-left: 5px solid #0E4D64;
     border-right: 5px solid #0E4D64;
     background-color: black;
-    width: 30%; /* Takes up remaining 30% width */
-
+    width: 30%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -193,7 +191,8 @@ header {
 }
 
 /* Alerts Table Container */
-.alerts-table-container {
+.alerts-table-container,
+.monitored-table-container {
     align-self: center;
     width: 100%;
     border: 3px solid #808080;
@@ -203,7 +202,7 @@ header {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: auto; /* Adjusted to match controls/retro display height */
+    height: auto;
 }
 
 .alerts-table {
@@ -211,16 +210,71 @@ header {
     border-collapse: collapse;
 }
 
-    .alerts-table th, .alerts-table td {
-        border: 1px solid #808080;
-        padding: 10px;
-        text-align: left;
+.alerts-table th,
+.alerts-table td {
+    border: 1px solid #808080;
+    padding: 10px;
+    text-align: left;
+}
+
+.alerts-table th {
+    background-color: #D3D3D3;
+    font-weight: bold;
+}
+
+/* Alerts Table Row Highlight */
+.alerts-table-container .alerts-table tbody tr {
+    background-color: #ffcccc; /* Light red for alerts */
+}
+
+    .alerts-table-container .alerts-table tbody tr:hover {
+        background-color: #ff9999; /* Darker red on hover */
     }
 
-    .alerts-table th {
-        background-color: #D3D3D3;
-        font-weight: bold;
-    }
+/* Monitored Table Row Highlight */
+.monitored-table-container .alerts-table tbody tr {
+    background-color: #ccffcc; /* Light green for monitored sensors */
+}
+
+.monitored-table-container .alerts-table tbody tr:hover {
+    background-color: #99ff99; /* Darker green on hover */
+}
+
+.sensors-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.sensors-table th, .sensors-table td {
+    border: 1px solid #808080;
+    padding: 10px;
+    text-align: left;
+}
+
+.sensors-table th {
+    background-color: #D3D3D3;
+    font-weight: bold;
+}
+
+.remove-button {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.add-button {
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
 
 /* Form Styling for Settings Page */
 .form-container {
@@ -235,7 +289,8 @@ header {
     width: 100%;
 }
 
-input, select {
+input,
+select {
     width: 100%;
     padding: 10px;
     font-size: 1em;
@@ -255,10 +310,17 @@ input, select {
     text-align: center;
 }
 
-    .set-button:hover {
-        background-color: #0056b3;
-    }
+.set-button:hover {
+    background-color: #0056b3;
+}
 
+.ignored-button {
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
 /* Status Message */
 #statusMessage {

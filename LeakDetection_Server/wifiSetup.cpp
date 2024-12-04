@@ -18,18 +18,19 @@ void initializeWiFi() {
     Serial.println("Initializing Wi-Fi...");
 
     if (connectToWiFi()) {
-        Serial.println("Connected to Wi-Fi.");
-        Serial.print("IP Address: ");
-        Serial.println(getLocalIP());
-        startMDNS("whoisleaking");  // Start mDNS with hostname "motor"
+        startMDNS("whoisleaking"); 
     } else {
-        Serial.println("Failed to connect to Wi-Fi. Starting Access Point...");
-        startAccessPoint();
+        Serial.println("Failed to connect to Wi-Fi.");
+    }
+
+    if(! startAccessPoint())
+    {
+        Serial.println("Failed to start Wi-Fi AP.");
     }
 }
 
 bool connectToWiFi() {
-    WiFi.mode(WIFI_STA);  // Set WiFi to station mode (client)
+    WiFi.mode(WIFI_AP_STA);  // Set WiFi to station mode (client)
     WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
 
     Serial.print("Connecting to WiFi");
@@ -47,25 +48,26 @@ bool connectToWiFi() {
         }
     }
 
-    Serial.println("\nConnected to WiFi");
-    Serial.print("IP Address: ");
+    Serial.println("Connected to WiFi");
+    Serial.println("IP Address: ");
     Serial.println(WiFi.localIP());
 
     return true;
 }
 
+bool startAccessPoint() {
+    Serial.print("Starting WiFi AP...");
 
-void startAccessPoint() {
-    WiFi.mode(WIFI_AP);  // Set Wi-Fi mode to access point
-    WiFi.softAP("LeakDetection_Main");
+    if (!WiFi.softAP("Leak_Master", "")) {
+        Serial.println("Failed to start AP.");
+        return false;
+    }
 
-    IPAddress apIP = WiFi.softAPIP();
     Serial.print("AP IP Address: ");
-    Serial.println(apIP);
-
-    // Optionally start mDNS in AP mode
-    startMDNS("whoisleaking");
+    Serial.println(WiFi.softAPIP());
+    return true;
 }
+
 
 void startMDNS(const char* hostname) {
     if (MDNS.begin(hostname)) {

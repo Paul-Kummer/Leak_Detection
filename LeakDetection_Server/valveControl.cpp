@@ -9,7 +9,10 @@ void setupValveControl() {
 }
 
 void controlValve() {
+    // Debug: Print valve position being used
+    // Serial.printf("controlValve using valve position: %d%%\n", valvePosition);
+
     // Display the current valve position on the OLED
     String positionText = String(valvePosition) + "%";
-    displayInfo(positionText);  // Call the display function
+    displayInfo(positionText);
 }

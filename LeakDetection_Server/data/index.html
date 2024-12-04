@@ -51,25 +51,41 @@
             <!-- Alerts Table -->
             <div class="alerts-table-container">
                 <h2>Active Alerts</h2>
-                <table class="alerts-table">
+                <table id="alertTable" class="alerts-table">
                     <thead>
                         <tr>
-                            <th>Alert ID</th>
                             <th>Timestamp</th>
-                            <th>Description</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>ID</th>
                             <th>Status</th>
+                            <th>Triggered</th>
+                            <th>Ignored</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>2024-10-11 14:32</td>
-                            <td>High pressure detected in valve A</td>
-                            <td>Active</td>
-                        </tr>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
+
+            <!-- Monitored Sensors Table -->
+            <div class="monitored-table-container">
+                <h2>Sensors</h2>
+                <table id="monitoredTable" class="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Triggered</th>
+                            <th>Ignored</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 
